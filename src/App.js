@@ -1,25 +1,89 @@
-import logo from './logo.svg';
+import React, { useEffect, useState } from 'react';
 import './App.css';
 
-function App() {
+export default function App() {
+  const [artworks, setArtworks] = useState([]);
+
+  async function fetchArtWithImages(){
+    try {
+      const response = await fetch(
+        'https://collectionapi.metmuseum.org/public/collection/v1/search?q=a&hasImages=true'
+      );
+      if (!response.ok) {
+        throw new Error('Network response was not ok');
+      }
+      const data = await response.json();
+      // console.log(data.objectIDs);
+      //setValidIDs(data.objectIDs)
+      loadArtwork(data.objectIDs)
+
+    } catch (error) {
+      console.error(error);
+    }
+  }
+
+  useEffect(()=>{
+  fetchArtWithImages()}, [])
+
+    async function loadArtwork(ids) {
+      const cards = [];
+      
+      let pageSize = 10
+      let i = 0;
+
+      // Loop for the amount of cards we want
+      while (i < pageSize) {
+        try {
+          const response = await fetch(
+            'https://collectionapi.metmuseum.org/public/collection/v1/objects/'+[ids[i]]
+          );
+
+          if (!response.ok) {
+            throw new Error('Network response was not ok');
+          }
+
+          const data = await response.json();
+          console.log(data);
+
+          if (data.title !== "" && data.primaryImage !== "" && data.artistDisplayName !== "") {
+            // Push artwork data into the cards array
+            cards.push(
+              <Card
+                key={data.objectID}
+                title={data.title}
+                artist={data.artistDisplayName}
+                imageUrl={data.primaryImage}
+              />
+            );
+          }
+          else{
+            pageSize++;
+          }
+        } catch (error) {
+          console.error(error);
+        }
+        i++;
+      }
+      setArtworks(cards);
+    }
+
+    // // Call the loadArtwork function
+    // loadArtwork(validIDs);
+
   return (
     <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
+      {/* Render the array of artwork cards */}
+      {artworks}
     </div>
   );
 }
 
-export default App;
+function Card({ title, artist, imageUrl }) {
+  return (
+    <div className="card">
+      <img src={imageUrl} alt={title} />
+      <h2 id="art-title">{title}</h2>
+      <h4 id="artist-name">Artist: {artist}</h4>
+    </div>
+  );
+}
