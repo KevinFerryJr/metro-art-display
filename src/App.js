@@ -38,7 +38,9 @@ export default function App() {
             'https://collectionapi.metmuseum.org/public/collection/v1/objects/'+[ids[i]]
           );
 
+          //If our request comes back invalid
           if (!response.ok) {
+            pageSize++
             throw new Error('Network response was not ok');
           }
 
@@ -60,11 +62,14 @@ export default function App() {
             pageSize++;
           }
         } catch (error) {
+          pageSize++;
           console.error(error);
         }
+        console.log(pageSize)
+        console.log(i)
         i++;
+        setArtworks(cards);
       }
-      setArtworks(cards);
     }
 
     // // Call the loadArtwork function
